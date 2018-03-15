@@ -18,7 +18,9 @@
         var game = new Phaser.Game(800,600,Phaser.AUTO,'', {
           preload: preload,
           create: create,
-          update: update
+          update: update,
+          create: eurecaClientSetup,
+          render: render
         });
 
         var myId=0;
@@ -76,19 +78,18 @@
                 if (i == myId) return; //this is me
                 
                 console.log('SPAWN');
-                var tnk = new Tank(i, game, tank);
-                tanksList[i] = tnk;
+                var pdl = new Paddle(i, game, paddle);
+                paddleList[i] = pdl;
             }
             
             eurecaClient.exports.updateState = function(id, state)
             {
-                if (tanksList[id])  {
-                    tanksList[id].cursor = state;
-                    tanksList[id].tank.x = state.x;
-                    tanksList[id].tank.y = state.y;
-                    tanksList[id].tank.angle = state.angle;
-                    tanksList[id].turret.rotation = state.rot;
-                    tanksList[id].update();
+                if (paddle[id])  {
+                    paddleList[id].cursor = state;
+                    paddleList[id].paddle.x = state.x;
+                    paddleList[id].paddle.y = state.y;
+                    paddleList[id].paddle.angle = state.angle;
+                    paddleList[id].update();
                 }
             }
         }
@@ -135,6 +136,14 @@
             score1 = 0;
             score2 = 0;
 
+            tanksList = {};
+
+            player = new Paddle(myId, game, paddle);
+            paddleList[myId] = player;
+            paddle = player.paddle;
+            paddle.x=0;
+            paddle.y=0;
+
         }
         
         function update(){
@@ -161,10 +170,19 @@
             paddle2.body.velocity.setTo(ball.body.velocity.y);
             paddle2.body.velocity.x = 0;
             paddle2.body.maxVelocity.y = 250;
+            
+            //do not update if client not ready
+            if (!ready) return;
+            
+            player.input.up = cursors.up.isDown;
+            player.input.fire = game.input.activePointer.isDown;
+            player.input.tx = game.input.x+ game.camera.x;
+            player.input.ty = game.input.y+ game.camera.y;
+               
+            land.tilePosition.x = -game.camera.x;
+            land.tilePosition.y = -game.camera.y;
 
-
-
-        }
+            }
 
         function create_paddle(x,y){
             var paddle = game.add.sprite(x,y,'paddle');
@@ -211,6 +229,8 @@
         	}
         	
         }
+
+        function render () {}
 
         </script>
 </body>
